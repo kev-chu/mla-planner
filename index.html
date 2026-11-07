@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Editable Class Timetable</title>
+<style>
+:root{color-scheme:dark;--bg:#09111d;--panel:#111c2b;--panel2:#172438;--line:#2a3a50;--text:#e8eef8;--muted:#9aabc1;--accent:#7eb3ff;--danger:#ff8181}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px 13px;background:#1b2b41;color:var(--text)}button:hover{filter:brightness(1.14)}button.primary{background:#245a94;border-color:#3978b9}button.danger{background:#49252e;border-color:#783b48;color:#ffdce1}button:disabled{opacity:.45;cursor:not-allowed}
+.app{max-width:1500px;margin:auto;padding:24px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.title h1{font-size:26px;margin:0 0 4px;letter-spacing:-.04em}.title p{margin:0;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.statusbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:16px;color:var(--muted);font-size:12px}.statusleft{display:flex;gap:9px;align-items:center}.dot{width:8px;height:8px;border-radius:50%;background:#e5b45f}.dot.ok{background:#4ac59b}.dot.bad{background:#ff7777}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 14px}.legend span{display:flex;align-items:center;gap:6px;font-size:12px;color:#bdc9d9}.swatch{width:10px;height:10px;border-radius:3px}
+.calendar-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#101a28}.calendar{min-width:850px;display:grid;grid-template-columns:66px repeat(5,minmax(0,1fr))}.head{background:#1a2a3e;padding:12px 5px;text-align:center;font-weight:700;border-bottom:1px solid var(--line)}.corner{background:#1a2a3e;border-bottom:1px solid var(--line)}.timecol{height:540px;position:relative;background:#111c2b;border-right:1px solid var(--line)}.tick{position:absolute;right:8px;transform:translateY(-50%);font-size:11px;color:#8fa2ba}.day{height:540px;position:relative;border-right:1px solid var(--line);background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 59px,#29394e 59px,#29394e 60px)}.day:last-child{border-right:0}.day.dragover{background-color:#17283d}
+.event{position:absolute;border-radius:7px;padding:5px 6px;overflow:hidden;border-left:4px solid var(--c);background:var(--fill);color:var(--event-text);font-size:11px;line-height:1.25;cursor:grab;box-shadow:0 2px 8px #0004;user-select:none}.event:hover{filter:brightness(1.15);z-index:20!important}.event:active{cursor:grabbing}.event strong{display:block;font-size:11px;margin-bottom:2px}.event small{display:block;font-size:10px;opacity:.9;margin-top:2px}.event .edit-hint{font-size:9px;opacity:.65;margin-top:3px}
+.emptyhint{padding:10px;color:var(--muted);font-size:11px}.below{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.info{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:13px 15px}.info h3{margin:0 0 6px;font-size:13px}.info p,.info li{font-size:12px;color:#b4c2d4;margin:4px 0}.info ul{padding-left:18px;margin:5px 0}.foot{color:#8193aa;font-size:11px;margin:13px 2px}
+.hprf{--c:#45c6a5;--fill:#153d3a;--event-text:#d7fff3}.mela{--c:#75a9ff;--fill:#1b3154;--event-text:#e1edff}.mela2{--c:#ff8b7e;--fill:#512c32;--event-text:#ffe7e4}.melt{--c:#f3bd64;--fill:#4a3922;--event-text:#fff0d4}.phae{--c:#e99aab;--fill:#482d3a;--event-text:#ffe8ef}.spah{--c:#aaa1ff;--fill:#34305a;--event-text:#efedff}
+.modal-back{position:fixed;inset:0;background:#020711c9;display:none;align-items:center;justify-content:center;padding:16px;z-index:100}.modal-back.open{display:flex}.modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#142033;border:1px solid #344861;border-radius:15px;padding:20px;box-shadow:0 20px 70px #0009}.modal h2{margin:0 0 4px;font-size:20px}.modal .desc{color:var(--muted);font-size:12px;margin:0 0 16px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:11px;color:#b9c7d8}.field input,.field select{width:100%;background:#0c1726;border:1px solid #34465e;color:var(--text);padding:9px;border-radius:8px;min-width:0}.modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:18px;flex-wrap:wrap}.right-actions{display:flex;gap:8px;margin-left:auto}
+.setup{background:#0d1928;border:1px solid #30435c;border-radius:10px;padding:12px;margin-top:12px}.setup h3{font-size:13px;margin:0 0 7px}.setup p,.setup li{font-size:12px;color:#b5c3d5}.setup code{white-space:pre-wrap;word-break:break-word;background:#08111d;padding:2px 4px;border-radius:4px;color:#c5d8f4}.setup pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#08111d;padding:10px;border-radius:8px;color:#c5d8f4;font-size:11px;max-height:190px;overflow:auto}.authrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.muted{color:var(--muted)}.small{font-size:11px}
+@media(max-width:760px){.app{padding:12px}.top{display:block}.actions{justify-content:flex-start;margin-top:14px}.below{grid-template-columns:1fr}.statusbar{align-items:flex-start;flex-direction:column}.formgrid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="title"><h1>Weekly Class Schedule</h1><p>Monday–Friday · 8:00 a.m.–5:00 p.m. · Click a class to edit, or drag it to move it</p></div>
+    <div class="actions">
+      <button class="primary" id="addBtn">＋ Add class</button>
+      <button id="cloudBtn">☁ Cloud setup</button>
+      <button id="exportBtn">Export backup</button>
+      <button id="importBtn">Import backup</button>
+      <input id="importFile" type="file" accept="application/json" hidden>
+    </div>
+  </header>
+  <div class="statusbar"><div class="statusleft"><span class="dot" id="statusDot"></span><span id="saveStatus">Not connected to cloud · changes saved in this browser</span></div><span id="accountStatus">Cloud sync not configured</span></div>
+  <div class="legend" id="legend"></div>
+  <div class="calendar-wrap"><div class="calendar">
+    <div class="corner"></div><div class="head">Monday</div><div class="head">Tuesday</div><div class="head">Wednesday</div><div class="head">Thursday</div><div class="head">Friday</div>
+    <div class="timecol" id="timecol"></div>
+    <div class="day" data-day="Mon"></div><div class="day" data-day="Tue"></div><div class="day" data-day="Wed"></div><div class="day" data-day="Thu"></div><div class="day" data-day="Fri"></div>
+  </div></div>
+  <div class="below">
+    <section class="info"><h3>Online / no fixed meeting time</h3><p><strong>HPRF 1101 A01</strong> and <strong>PHAE 1104 A01</strong> are listed as online with no set class time. Their scheduled in-person meetings are shown on the calendar.</p></section>
+    <section class="info"><h3>Items to verify from registration portal</h3><ul><li>MELA 1108 X01 lists Tuesday 8:00–8:50 a.m. in both G211 and F108. Both entries are retained.</li><li>PHAE 1104 A01 Tuesday 3:00–3:50 p.m. has no room shown.</li></ul></section>
+  </div>
+  <div class="foot">Your edits are cached in this browser. To sync across devices, connect a Supabase project in Cloud setup. Avoid putting sensitive personal information in this timetable.</div>
+</div>
+
+<div class="modal-back" id="editBack"><div class="modal">
+  <h2 id="editTitle">Edit class</h2><p class="desc">Update the class details below. Click Save changes when finished.</p>
+  <form id="classForm"><div class="formgrid">
+    <div class="field"><label>Subject</label><input name="subject" placeholder="e.g. MELA" required></div>
+    <div class="field"><label>Course number</label><input name="course" placeholder="e.g. 1106" required></div>
+    <div class="field"><label>Section</label><input name="section" placeholder="A01"></div>
+    <div class="field"><label>Class number</label><input name="classNo" placeholder="e.g. 21531"></div>
+    <div class="field"><label>Day</label><select name="day"><option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option></select></div>
+    <div class="field"><label>Room / location</label><input name="room" placeholder="e.g. E102"></div>
+    <div class="field"><label>Start time</label><input name="start" type="time" min="08:00" max="16:59" required></div>
+    <div class="field"><label>End time</label><input name="end" type="time" min="08:01" max="17:00" required></div>
+    <div class="field"><label>Credits</label><input name="credits" type="number" min="0" max="30" step="1"></div>
+    <div class="field"><label>Colour</label><select name="color"><option value="hprf">Mint</option><option value="mela">Blue</option><option value="mela2">Coral</option><option value="melt">Amber</option><option value="phae">Rose</option><option value="spah">Lavender</option><option value="custom">Custom colour</option></select></div>
+    <div class="field full" id="customColorWrap" style="display:none"><label>Custom colour</label><input name="customColor" type="color" value="#75a9ff"></div>
+    <div class="field full"><label><input name="online" type="checkbox" style="width:auto;vertical-align:middle"> Also listed as online / no fixed class time</label></div>
+  </div><div class="modal-actions"><button type="button" class="danger" id="deleteBtn">Delete class</button><div class="right-actions"><button type="button" id="cancelEdit">Cancel</button><button class="primary" type="submit">Save changes</button></div></div></form>
+</div></div>
+
+<div class="modal-back" id="cloudBack"><div class="modal">
+  <h2>Cloud sync setup</h2><p class="desc">Connect a free Supabase project to sync this timetable between devices. Your Supabase URL and anon/publishable key are safe to use in a browser app when Row Level Security is enabled as instructed below.</p>
+  <div class="field"><label>Supabase project URL</label><input id="sbUrl" placeholder="https://xxxxxxxx.supabase.co"></div>
+  <div class="field" style="margin-top:9px"><label>Supabase anon / publishable key</label><input id="sbKey" placeholder="sb_publishable_... or legacy anon key"></div>
+  <button class="primary" id="connectBtn" style="margin-top:10px">Connect project</button>
+  <div class="setup">
+    <h3>First: create your free Supabase project</h3>
+    <ol><li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a> and create a project.</li><li>In Project Settings → API, copy the Project URL and anon/public key (or publishable key) into the fields above.</li><li>Open SQL Editor → New query, paste the SQL below, and click Run.</li><li>Return here, connect, then create an account with your email and password.</li></ol>
+    <h3>Run this SQL once in Supabase</h3>
+    <pre id="sqlText">create table if not exists public.class_schedules (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  schedule jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.class_schedules enable row level security;
+
+create policy "Users can read their own schedule"
+on public.class_schedules for select
+using (auth.uid() = user_id);
+
+create policy "Users can insert their own schedule"
+on public.class_schedules for insert
+with check (auth.uid() = user_id);
+
+create policy "Users can update their own schedule"
+on public.class_schedules for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);</pre>
+    <button id="copySql">Copy SQL</button>
+  </div>
+  <div class="setup">
+    <h3>Sign in or create your account</h3>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
+    <div class="field" style="margin-top:8px"><label>Password (at least 6 characters)</label><input id="authPassword" type="password" placeholder="Password"></div>
+    <div class="authrow"><button id="signUpBtn">Create account</button><button class="primary" id="signInBtn">Sign in</button></div>
+    <p class="small muted" id="authMessage">Connect your Supabase project before signing in. Depending on your Supabase email settings, account confirmation may be required.</p>
+    <button id="syncNowBtn" style="margin-top:5px">Sync now</button>
+    <button id="signOutBtn" style="margin-top:5px">Sign out</button>
+  </div>
+  <div class="modal-actions"><span class="small muted">Cloud credentials are stored in this browser's local storage.</span><div class="right-actions"><button id="closeCloud">Close</button></div></div>
+</div></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const DAYS=['Mon','Tue','Wed','Thu','Fri'];
+const seed=[
+{id:'c1',subject:'HPRF',course:'1101',section:'A01',classNo:'26036',day:'Wed',start:'10:00',end:'11:50',room:'E117',credits:3,color:'hprf',online:true},
+{id:'c2',subject:'MELA',course:'1106',section:'X01',classNo:'21532',day:'Thu',start:'08:00',end:'09:50',room:'F108',credits:0,color:'mela'},
+{id:'c3',subject:'MELA',course:'1106',section:'A01',classNo:'21531',day:'Tue',start:'13:00',end:'14:50',room:'E102',credits:3,color:'mela'},
+{id:'c4',subject:'MELA',course:'1106',section:'A01',classNo:'21531',day:'Thu',start:'15:00',end:'15:50',room:'E102',credits:3,color:'mela'},
+{id:'c5',subject:'MELA',course:'1108',section:'X01',classNo:'21538',day:'Mon',start:'09:00',end:'10:50',room:'CAT126',credits:0,color:'mela2'},
+{id:'c6',subject:'MELA',course:'1108',section:'X01',classNo:'21538',day:'Tue',start:'08:00',end:'08:50',room:'G211',credits:0,color:'mela2'},
+{id:'c7',subject:'MELA',course:'1108',section:'X01',classNo:'21538',day:'Tue',start:'08:00',end:'08:50',room:'F108',credits:0,color:'mela2'},
+{id:'c8',subject:'MELA',course:'1108',section:'A01',classNo:'21537',day:'Wed',start:'08:00',end:'08:50',room:'E115',credits:3,color:'mela2'},
+{id:'c9',subject:'MELA',course:'1108',section:'A01',classNo:'21537',day:'Thu',start:'14:00',end:'14:50',room:'E120',credits:3,color:'mela2'},
+{id:'c10',subject:'MELT',course:'1107',section:'X01',classNo:'21511',day:'Fri',start:'13:00',end:'14:50',room:'F106',credits:0,color:'melt'},
+{id:'c11',subject:'MELT',course:'1107',section:'A01',classNo:'21510',day:'Wed',start:'09:00',end:'09:50',room:'E115',credits:3,color:'melt'},
+{id:'c12',subject:'MELT',course:'1107',section:'A01',classNo:'21510',day:'Tue',start:'09:00',end:'09:50',room:'E120',credits:3,color:'melt'},
+{id:'c13',subject:'MELT',course:'1107',section:'A01',classNo:'21510',day:'Mon',start:'14:00',end:'14:50',room:'E202',credits:3,color:'melt'},
+{id:'c14',subject:'PHAE',course:'1104',section:'A01',classNo:'21541',day:'Fri',start:'09:00',end:'09:50',room:'E115',credits:3,color:'phae',online:true},
+{id:'c15',subject:'PHAE',course:'1104',section:'A01',classNo:'21541',day:'Thu',start:'13:00',end:'13:50',room:'E117',credits:3,color:'phae'},
+{id:'c16',subject:'PHAE',course:'1104',section:'A01',classNo:'21541',day:'Tue',start:'15:00',end:'15:50',room:'Room not listed',credits:3,color:'phae'},
+{id:'c17',subject:'PHAE',course:'1104',section:'X01',classNo:'21542',day:'Fri',start:'10:00',end:'11:50',room:'G211',credits:0,color:'phae'},
+{id:'c18',subject:'SPAH',course:'1102',section:'A01',classNo:'21544',day:'Fri',start:'08:00',end:'08:50',room:'E102',credits:3,color:'spah'},
+{id:'c19',subject:'SPAH',course:'1102',section:'A01',classNo:'21544',day:'Tue',start:'10:00',end:'11:50',room:'E120',credits:3,color:'spah'},
+{id:'c20',subject:'SPAH',course:'1102',section:'A01',classNo:'21544',day:'Mon',start:'15:00',end:'15:50',room:'E115',credits:3,color:'spah'},
+{id:'c21',subject:'SPAH',course:'1102',section:'X01',classNo:'21545',day:'Thu',start:'10:00',end:'11:50',room:'F107',credits:0,color:'spah'}
+];
+let classes=JSON.parse(localStorage.getItem('myTimetableData')||'null')||seed;
+let supabase=null, currentUser=null, editingId=null, dragId=null, saveTimer=null, customColors={};
+const $=id=>document.getElementById(id);
+const setStatus=(msg,type='pending')=>{$('saveStatus').textContent=msg;$('statusDot').className='dot '+(type==='ok'?'ok':type==='bad'?'bad':'');};
+const mins=t=>{const [h,m]=t.split(':').map(Number);return h*60+m-480;};
+const fmt=t=>{let [h,m]=t.split(':').map(Number);let ap=h>=12?'p.m.':'a.m.';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${ap}`;};
+function persistLocal(){localStorage.setItem('myTimetableData',JSON.stringify(classes));}
+function scheduleSave(){persistLocal();if(currentUser&&supabase){setStatus('Changes saved locally · syncing to cloud…');clearTimeout(saveTimer);saveTimer=setTimeout(saveCloud,700);}else setStatus('Saved in this browser · cloud not connected');}
+async function saveCloud(){if(!currentUser||!supabase)return;try{const {error}=await supabase.from('class_schedules').upsert({user_id:currentUser.id,schedule:classes,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error)throw error;setStatus('All changes synced to cloud','ok');}catch(e){setStatus('Cloud save failed: '+e.message,'bad');}}
+function render(){
+  const legend=$('legend');legend.innerHTML='';const seen=new Map();
+  classes.forEach(c=>{let k=c.subject+' '+c.course;if(!seen.has(k))seen.set(k,c);});
+  for(const [name,c] of seen){let span=document.createElement('span');let sw=document.createElement('i');sw.className='swatch';sw.style.background=c.customColor||({hprf:'#45c6a5',mela:'#75a9ff',mela2:'#ff8b7e',melt:'#f3bd64',phae:'#e99aab',spah:'#aaa1ff'}[c.color]||'#75a9ff');span.append(sw,document.createTextNode(name));legend.append(span);}
+  document.querySelectorAll('.day').forEach(dayEl=>{
+    dayEl.innerHTML='';const day=dayEl.dataset.day;const arr=classes.filter(c=>c.day===day).sort((a,b)=>a.start.localeCompare(b.start));
+    // Assign columns for overlapping meetings.
+    const lanes=[];
+    arr.forEach(c=>{let s=mins(c.start),e=mins(c.end),lane=lanes.findIndex(last=>last<=s);if(lane<0)lane=lanes.length;lanes[lane]=e;c._lane=lane;});
+    const laneCount=Math.max(1,lanes.length);
+    arr.forEach(c=>{
+      const el=document.createElement('div');el.className='event '+(c.color||'mela');el.draggable=true;el.dataset.id=c.id;
+      const top=Math.max(0,mins(c.start)),height=Math.max(24,mins(c.end)-mins(c.start));
+      const lane=c._lane||0;el.style.top=top+'px';el.style.height=height+'px';el.style.left=`calc(${lane/laneCount*100}% + 4px)`;el.style.width=`calc(${100/laneCount}% - 8px)`;el.style.zIndex=lane+1;
+      if(c.customColor){el.style.setProperty('--c',c.customColor);el.style.setProperty('--fill',c.customColor+'33');el.style.setProperty('--event-text','#f2f6fc');}
+      el.innerHTML=`<strong>${esc(c.subject)} ${esc(c.course)} ${esc(c.section||'')}</strong>${fmt(c.start)}–${fmt(c.end)}<small>${esc(c.room||'Room not set')}</small><small class="edit-hint">Click to edit · drag to move</small>`;
+      el.addEventListener('click',()=>openEditor(c.id));el.addEventListener('dragstart',e=>{dragId=c.id;e.dataTransfer.setData('text/plain',c.id);e.dataTransfer.effectAllowed='move';});
+      dayEl.append(el);
+    });
+  });
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const timecol=$('timecol');for(let h=8;h<=17;h++){let el=document.createElement('div');el.className='tick';el.style.top=((h-8)*60)+'px';el.textContent=(h===12?'12:00 p.m.':h>12?(h-12)+':00 p.m.':h+':00 a.m.');timecol.append(el);}
+document.querySelectorAll('.day').forEach(dayEl=>{
+ dayEl.addEventListener('dragover',e=>{e.preventDefault();dayEl.classList.add('dragover');});
+ dayEl.addEventListener('dragleave',()=>dayEl.classList.remove('dragover'));
+ dayEl.addEventListener('drop',e=>{e.preventDefault();dayEl.classList.remove('dragover');const id=e.dataTransfer.getData('text/plain')||dragId;const c=classes.find(x=>x.id===id);if(!c)return;const rect=dayEl.getBoundingClientRect();let m=Math.round(((e.clientY-rect.top)/60*60)/15)*15;m=Math.max(0,Math.min(540-(mins(c.end)-mins(c.start)),m));const dur=mins(c.end)-mins(c.start);const startMin=480+m,endMin=startMin+dur;c.day=dayEl.dataset.day;c.start=toTime(startMin);c.end=toTime(endMin);render();scheduleSave();});
+});
+function toTime(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+function openEditor(id){editingId=id||null;const c=classes.find(x=>x.id===id)||{subject:'',course:'',section:'',classNo:'',day:'Mon',room:'',start:'09:00',end:'10:00',credits:0,color:'mela',online:false};$('editTitle').textContent=id?'Edit class':'Add class';const f=$('classForm');for(const k of ['subject','course','section','classNo','day','room','start','end','credits','color'])f.elements[k].value=c[k]??'';f.elements.online.checked=!!c.online;f.elements.customColor.value=c.customColor||'#75a9ff';$('customColorWrap').style.display=c.color==='custom'?'flex':'none';$('deleteBtn').style.display=id?'inline-block':'none';$('editBack').classList.add('open');}
+$('classForm').elements.color.addEventListener('change',e=>$('customColorWrap').style.display=e.target.value==='custom'?'flex':'none');
+$('classForm').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget;let obj={id:editingId||('c'+Date.now()),subject:f.elements.subject.value.trim().toUpperCase(),course:f.elements.course.value.trim(),section:f.elements.section.value.trim(),classNo:f.elements.classNo.value.trim(),day:f.elements.day.value,room:f.elements.room.value.trim(),start:f.elements.start.value,end:f.elements.end.value,credits:Number(f.elements.credits.value||0),color:f.elements.color.value,online:f.elements.online.checked};if(obj.color==='custom')obj.customColor=f.elements.customColor.value;if(obj.end<=obj.start){alert('End time must be later than start time.');return;}if(obj.start<'08:00'||obj.end>'17:00'){alert('Class times must fit within the 8:00 a.m.–5:00 p.m. timetable.');return;}if(editingId)classes=classes.map(c=>c.id===editingId?obj:c);else classes.push(obj);$('editBack').classList.remove('open');render();scheduleSave();});
+$('deleteBtn').onclick=()=>{if(!editingId)return;if(confirm('Delete this class meeting?')){classes=classes.filter(c=>c.id!==editingId);$('editBack').classList.remove('open');render();scheduleSave();}};
+$('cancelEdit').onclick=()=>$('editBack').classList.remove('open');$('addBtn').onclick=()=>openEditor(null);
+$('exportBtn').onclick=()=>{const a=document.createElement('a'),blob=new Blob([JSON.stringify(classes,null,2)],{type:'application/json'});a.href=URL.createObjectURL(blob);a.download='my-class-timetable-backup.json';a.click();URL.revokeObjectURL(a.href);};
+$('importBtn').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!Array.isArray(data))throw Error('Backup format not recognized');classes=data;render();scheduleSave();alert('Backup imported.');}catch(err){alert('Could not import backup: '+err.message);}e.target.value='';};
+$('cloudBtn').onclick=()=>$('cloudBack').classList.add('open');$('closeCloud').onclick=()=>$('cloudBack').classList.remove('open');
+$('copySql').onclick=async()=>{await navigator.clipboard.writeText($('sqlText').textContent);$('copySql').textContent='Copied!';setTimeout(()=>$('copySql').textContent='Copy SQL',1500);};
+function updateAccount(){ $('accountStatus').textContent=currentUser?'Signed in: '+currentUser.email:'Cloud sync not configured / signed out';$('signOutBtn').disabled=!currentUser;$('syncNowBtn').disabled=!currentUser;}
+async function connect(){const url=$('sbUrl').value.trim(),key=$('sbKey').value.trim();if(!url||!key){$('authMessage').textContent='Enter your Supabase Project URL and anon/publishable key first.';return false;}try{supabase=createClient(url,key);localStorage.setItem('sbUrl',url);localStorage.setItem('sbKey',key);const {data}=await supabase.auth.getSession();currentUser=data.session?.user||null;if(currentUser)await loadCloud();updateAccount();$('authMessage').textContent='Connected to Supabase. Sign in or create your account.';return true;}catch(e){$('authMessage').textContent='Connection error: '+e.message;return false;}}
+$('connectBtn').onclick=connect;
+async function loadCloud(){if(!currentUser||!supabase)return;try{const {data,error}=await supabase.from('class_schedules').select('schedule').eq('user_id',currentUser.id).maybeSingle();if(error)throw error;if(data?.schedule){classes=data.schedule;persistLocal();render();setStatus('Loaded your cloud timetable','ok');}else{await saveCloud();setStatus('Cloud account ready · uploaded this browser timetable','ok');}}catch(e){setStatus('Could not load cloud schedule: '+e.message,'bad');}}
+$('signUpBtn').onclick=async()=>{if(!supabase&&!await connect())return;const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||password.length<6){$('authMessage').textContent='Enter a valid email and a password of at least 6 characters.';return;}const {data,error}=await supabase.auth.signUp({email,password});if(error){$('authMessage').textContent=error.message;return;}currentUser=data.user;if(data.session){await loadCloud();$('authMessage').textContent='Account created and signed in.';}else $('authMessage').textContent='Account created. Check your email to confirm, then return and sign in.';updateAccount();};
+$('signInBtn').onclick=async()=>{if(!supabase&&!await connect())return;const {data,error}=await supabase.auth.signInWithPassword({email:$('authEmail').value.trim(),password:$('authPassword').value});if(error){$('authMessage').textContent=error.message;return;}currentUser=data.user;await loadCloud();updateAccount();$('authMessage').textContent='Signed in. Cloud sync is active.';};
+$('signOutBtn').onclick=async()=>{if(!supabase)return;await supabase.auth.signOut();currentUser=null;updateAccount();setStatus('Signed out · changes remain in this browser');$('authMessage').textContent='Signed out.';};
+$('syncNowBtn').onclick=async()=>{if(currentUser)await saveCloud();};
+const savedUrl=localStorage.getItem('sbUrl'),savedKey=localStorage.getItem('sbKey');if(savedUrl)$('sbUrl').value=savedUrl;if(savedKey)$('sbKey').value=savedKey;
+if(savedUrl&&savedKey){supabase=createClient(savedUrl,savedKey);const {data}=await supabase.auth.getSession();currentUser=data.session?.user||null;if(currentUser)await loadCloud();updateAccount();}
+persistLocal();render();
+</script>
+</body></html>
